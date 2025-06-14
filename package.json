@@ -37,6 +37,7 @@
         "expo-system-ui": "~5.0.8",
         "expo-web-browser": "~14.1.6",
         "livekit-client": "^2.13.4",
+        "livekit-server-sdk": "^2.13.0",
         "nativewind": "^4.1.23",
         "react": "19.0.0",
         "react-dom": "19.0.0",

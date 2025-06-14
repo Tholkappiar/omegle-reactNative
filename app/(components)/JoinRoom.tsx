@@ -1,56 +1,26 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import {
-    Button,
-    NativeSyntheticEvent,
-    TextInput,
-    TextInputChangeEventData,
-    View,
-} from "react-native";
-
-type JoinUserDetails = {
-    room: string;
-    token: string;
-};
+import { Button, TextInput, View } from "react-native";
 
 const JoinRoom = () => {
-    const [joinDetails, setJoinDetails] = useState<JoinUserDetails>({
-        token: "",
-        room: "",
-    });
+    const [room, setRoom] = useState<string>("");
 
-    function handleInput(key: keyof JoinUserDetails) {
-        return (event: NativeSyntheticEvent<TextInputChangeEventData>) => {
-            const value = event.nativeEvent.text;
-            setJoinDetails((prev) => ({
-                ...prev,
-                [key]: value,
-            }));
-        };
-    }
     const router = useRouter();
     const handleJoin = () => {
         router.push({
             pathname: "/Communication",
             params: {
-                token: joinDetails.token,
+                room: room,
             },
         });
     };
 
     return (
-        <View style={{ padding: 20 }}>
+        <View className="flex-1 justify-center items-center">
             <TextInput
                 placeholder="Room"
-                onChange={handleInput("room")}
-                value={joinDetails.room}
-                style={{ marginBottom: 10, borderBottomWidth: 1 }}
-            />
-            <TextInput
-                placeholder="token"
-                onChange={handleInput("token")}
-                value={joinDetails.token}
-                style={{ marginBottom: 10, borderBottomWidth: 1 }}
+                onChange={(event) => setRoom(event.nativeEvent.text)}
+                value={room}
             />
             <Button title="Join Room" onPress={handleJoin} />
         </View>

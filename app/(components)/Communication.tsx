@@ -1,32 +1,30 @@
+import { api } from "@/convex/_generated/api";
 import {
     AudioSession,
     LiveKitRoom,
     TrackReferenceOrPlaceholder,
     VideoTrack,
     isTrackReference,
-    registerGlobals,
     useTracks,
 } from "@livekit/react-native";
+import { useAction, useQuery } from "convex/react";
 import { useLocalSearchParams } from "expo-router";
 import { Track } from "livekit-client";
 import * as React from "react";
 import { useEffect } from "react";
-import { FlatList, ListRenderItem, StyleSheet, View } from "react-native";
+import { FlatList, ListRenderItem, StyleSheet, Text, View } from "react-native";
 
-registerGlobals();
-
-// !! Note !!
-// This sample hardcodes a token which expires in 2 hours.
 const wsURL = "wss://omegle-uarhh1wq.livekit.cloud";
-const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDk4OTI2ODcsImlzcyI6IkFQSWRDeHlmTkJkaGlZdiIsIm5iZiI6MTc0OTg4NTQ4Nywic3ViIjoicXVpY2tzdGFydCB1c2VyIG5qaTdpNCIsInZpZGVvIjp7ImNhblB1Ymxpc2giOnRydWUsImNhblB1Ymxpc2hEYXRhIjp0cnVlLCJjYW5TdWJzY3JpYmUiOnRydWUsInJvb20iOiJxdWlja3N0YXJ0IHJvb20iLCJyb29tSm9pbiI6dHJ1ZX19.QhVQ9HuWIDdHBEDIU_N_v8VIGqUprjkTQfXYhhDGmBM";
-
-type JoinUserDetails = {
-    room: string;
-    token: string;
-};
 
 export default function App() {
+    const { room } = useLocalSearchParams();
+
+    const profile = useQuery(api.user.getProfile);
+    const generateToken = useAction(
+        api.livekitCommunication.generateLivekitToken
+    );
+    const [token, setToken] = React.useState<string | null>(null);
+
     // Start the audio session first.
     useEffect(() => {
         let start = async () => {
@@ -39,7 +37,26 @@ export default function App() {
         };
     }, []);
 
-    const { token } = useLocalSearchParams();
+    useEffect(() => {
+        if (room && profile?.email) {
+            generateToken({
+                roomName: String(room),
+                participantName: profile.email,
+            })
+                .then(setToken)
+                .catch((err) => {
+                    console.error("Token fetch failed", err);
+                });
+        }
+    }, [room, profile?.email]);
+
+    if (!token) {
+        return (
+            <View>
+                <Text>Loading token...</Text>
+            </View>
+        );
+    }
 
     return (
         <LiveKitRoom
