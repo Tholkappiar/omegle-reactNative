@@ -1,4 +1,5 @@
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
+import { registerGlobals } from "@livekit/react-native";
 import { ConvexReactClient, useConvexAuth } from "convex/react";
 import { Stack } from "expo-router";
 import * as SecureStore from "expo-secure-store";
@@ -16,7 +17,7 @@ const secureStorage = {
     setItem: SecureStore.setItemAsync,
     removeItem: SecureStore.deleteItemAsync,
 };
-
+registerGlobals();
 function AppNavigator() {
     const { isAuthenticated, isLoading } = useConvexAuth();
 
