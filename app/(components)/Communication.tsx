@@ -23,8 +23,7 @@ export default function App() {
     const generateToken = useAction(
         api.livekitCommunication.generateLivekitToken
     );
-    const [token, setToken] = React.useState<string | null>(null);
-
+    const [token, setToken] = React.useState<string>("");
     // Start the audio session first.
     useEffect(() => {
         let start = async () => {
@@ -34,21 +33,22 @@ export default function App() {
         start();
         return () => {
             AudioSession.stopAudioSession();
+            console.log("audio stoppped");
         };
     }, []);
 
     useEffect(() => {
-        if (room && profile?.email) {
+        if (room && profile?._id) {
             generateToken({
                 roomName: String(room),
-                participantName: profile.email,
+                participantName: profile._id,
             })
                 .then(setToken)
                 .catch((err) => {
                     console.error("Token fetch failed", err);
                 });
         }
-    }, [room, profile?.email]);
+    }, [room, profile?._id]);
 
     if (!token) {
         return (
@@ -59,19 +59,22 @@ export default function App() {
     }
 
     return (
-        <LiveKitRoom
-            serverUrl={wsURL}
-            token={String(token)}
-            connect={true}
-            options={{
-                // Use screen pixel density to handle screens with differing densities.
-                adaptiveStream: { pixelDensity: "screen" },
-            }}
-            audio={true}
-            video={true}
-        >
-            <RoomView />
-        </LiveKitRoom>
+        <View className="flex-1">
+            <LiveKitRoom
+                serverUrl={wsURL}
+                token={token}
+                connect={true}
+                options={{
+                    // Use screen pixel density to handle screens with differing densities.
+                    adaptiveStream: { pixelDensity: "screen" },
+                }}
+                audio={true}
+                video={true}
+            >
+                <RoomView />
+            </LiveKitRoom>
+            <Text>This is the token : {token}</Text>
+        </View>
     );
 }
 

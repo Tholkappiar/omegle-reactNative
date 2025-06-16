@@ -1,31 +1,27 @@
-// convex/livekitCommunication.ts
-
+"use node";
 import { v } from "convex/values";
+import { AccessToken } from "livekit-server-sdk";
 import { action } from "./_generated/server";
 
 export const generateLivekitToken = action({
     args: { roomName: v.string(), participantName: v.string() },
     handler: async (ctx, args) => {
-        const response = await fetch(
-            "https://cloud-api.livekit.io/api/sandbox/connection-details",
-            {
-                method: "POST",
-                headers: {
-                    "X-Sandbox-ID": "seamless-transaction-irukfh",
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    roomName: args.roomName,
-                    participantName: args.participantName,
-                }),
-            }
-        );
-
-        if (!response.ok) {
-            throw new Error(`Failed to fetch token: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-        return result.participantToken;
+        const response = await createToken(args.roomName, args.participantName);
+        return response;
     },
 });
+
+const createToken = async (roomName: string, participantName: string) => {
+    const at = new AccessToken(
+        process.env.LIVEKIT_API_KEY,
+        process.env.LIVEKIT_API_SECRET,
+        {
+            identity: participantName,
+            // Token to expire after 10 minutes
+            ttl: "10h",
+        }
+    );
+    at.addGrant({ roomJoin: true, room: roomName });
+
+    return await at.toJwt();
+};
