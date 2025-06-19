@@ -3,15 +3,14 @@ import React, { useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
 const JoinRoom = () => {
-    const [room, setRoom] = useState<string>("");
+    const [user, setUser] = useState<string>("");
+    const [remote, setRemote] = useState<string>("");
 
     const router = useRouter();
     const handleJoin = () => {
         router.push({
-            pathname: "/Communication",
-            params: {
-                room: room,
-            },
+            pathname: "/Communication/[userId]/[remoteUserId]",
+            params: { userId: user, remoteUserId: remote },
         });
     };
 
@@ -33,10 +32,19 @@ const JoinRoom = () => {
                     Room Code
                 </Text>
                 <TextInput
-                    placeholder="Enter room code"
+                    placeholder="user id"
                     placeholderTextColor="#94a3b8"
-                    onChange={(event) => setRoom(event.nativeEvent.text)}
-                    value={room}
+                    onChange={(event) => setUser(event.nativeEvent.text)}
+                    value={user}
+                    className="w-full h-14 bg-slate-50 rounded-xl px-4 text-lg text-slate-800 border border-slate-200 focus:border-blue-500"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                />
+                <TextInput
+                    placeholder="rmeote id"
+                    placeholderTextColor="#94a3b8"
+                    onChange={(event) => setRemote(event.nativeEvent.text)}
+                    value={remote}
                     className="w-full h-14 bg-slate-50 rounded-xl px-4 text-lg text-slate-800 border border-slate-200 focus:border-blue-500"
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -46,18 +54,11 @@ const JoinRoom = () => {
             {/* Join Button */}
             <TouchableOpacity
                 onPress={handleJoin}
-                disabled={!room.trim()}
-                className={`w-full max-w-sm h-14 rounded-xl items-center justify-center shadow-lg ${
-                    room.trim()
-                        ? "bg-blue-600 active:bg-blue-700"
-                        : "bg-slate-300"
-                }`}
+                className={
+                    "w-full max-w-sm h-14 rounded-xl items-center justify-center shadow-lg bg-blue-500"
+                }
             >
-                <Text
-                    className={`text-lg font-semibold ${
-                        room.trim() ? "text-white" : "text-slate-500"
-                    }`}
-                >
+                <Text className={"text-lg font-semibold text-white"}>
                     Join Room
                 </Text>
             </TouchableOpacity>

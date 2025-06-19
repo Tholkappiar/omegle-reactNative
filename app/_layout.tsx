@@ -1,7 +1,6 @@
 import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/useColorScheme";
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
-import { registerGlobals } from "@livekit/react-native";
 import {
     DarkTheme,
     DefaultTheme,
@@ -27,17 +26,18 @@ const DARK_THEME: Theme = {
     colors: NAV_THEME.dark,
 };
 
-const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
-    unsavedChangesWarning: false,
-});
+const convex = new ConvexReactClient(
+    "https://precious-axolotl-250.convex.cloud",
+    {
+        unsavedChangesWarning: false,
+    }
+);
 
 const secureStorage = {
     getItem: SecureStore.getItemAsync,
     setItem: SecureStore.setItemAsync,
     removeItem: SecureStore.deleteItemAsync,
 };
-
-registerGlobals();
 
 function AppNavigator() {
     const hasMounted = React.useRef(false);

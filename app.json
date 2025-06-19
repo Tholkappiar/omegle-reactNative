@@ -55,9 +55,7 @@
                     "backgroundColor": "#ffffff"
                 }
             ],
-            "expo-secure-store",
-            "@livekit/react-native-expo-plugin",
-            "@config-plugins/react-native-webrtc"
+            "expo-secure-store"
         ],
         "experiments": {
             "typedRoutes": true
