@@ -3,14 +3,13 @@ import React, { useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
 const JoinRoom = () => {
-    const [user, setUser] = useState<string>("");
     const [remote, setRemote] = useState<string>("");
 
     const router = useRouter();
     const handleJoin = () => {
         router.push({
-            pathname: "/Communication/[userId]/[remoteUserId]",
-            params: { userId: user, remoteUserId: remote },
+            pathname: "/(components)/[remoteUserId]",
+            params: { remoteUserId: remote },
         });
     };
 
@@ -31,15 +30,6 @@ const JoinRoom = () => {
                 <Text className="text-sm font-semibold text-slate-700 mb-3 uppercase tracking-wide">
                     Room Code
                 </Text>
-                <TextInput
-                    placeholder="user id"
-                    placeholderTextColor="#94a3b8"
-                    onChange={(event) => setUser(event.nativeEvent.text)}
-                    value={user}
-                    className="w-full h-14 bg-slate-50 rounded-xl px-4 text-lg text-slate-800 border border-slate-200 focus:border-blue-500"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                />
                 <TextInput
                     placeholder="rmeote id"
                     placeholderTextColor="#94a3b8"

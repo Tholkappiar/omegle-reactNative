@@ -1,3 +1,5 @@
+import { api } from "@/convex/_generated/api";
+import { useQuery } from "convex/react";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -17,11 +19,9 @@ import {
     RTCView,
 } from "react-native-webrtc";
 
-// Define interface for route parameters
-interface SearchParams {
-    userId?: string;
+type SearchParams = {
     remoteUserId?: string;
-}
+};
 
 // Define interface for WebSocket messages
 interface WebSocketMessage {
@@ -42,8 +42,12 @@ const Communication = () => {
     const peerConnection = useRef<RTCPeerConnection | null>(null);
     const ws = useRef<WebSocket | null>(null);
 
-    const { userId = "", remoteUserId = "" } =
-        useLocalSearchParams<SearchParams>();
+    const profile = useQuery(api.user.getProfile);
+    const { remoteUserId = "" } = useLocalSearchParams<SearchParams>();
+
+    const participantProfile = useQuery(api.user.getParticipantProfile, {
+        email: remoteUserId,
+    });
 
     const configuration: RTCConfiguration = {
         iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
@@ -129,8 +133,8 @@ const Communication = () => {
                 if (event.candidate && ws.current) {
                     const message: WebSocketMessage = {
                         type: "candidate",
-                        from: userId,
-                        to: remoteUserId,
+                        from: String(profile?._id),
+                        to: String(participantProfile?._id),
                         candidate: event.candidate.toJSON(),
                     };
                     ws.current.send(JSON.stringify(message));
@@ -156,7 +160,9 @@ const Communication = () => {
     // Initialize WebSocket
     const initializeWebSocket = () => {
         try {
-            ws.current = new WebSocket("ws://192.168.99.204:3000/");
+            ws.current = new WebSocket(
+                "ws://signaling-server-vl35.onrender.com"
+            );
 
             ws.current.onopen = async () => {
                 console.log("WebSocket connected");
@@ -164,7 +170,7 @@ const Communication = () => {
                 // Register user
                 const registerMsg: WebSocketMessage = {
                     type: "register",
-                    from: userId,
+                    from: String(profile?._id),
                     to: "",
                 };
                 ws.current?.send(JSON.stringify(registerMsg));
@@ -178,8 +184,8 @@ const Communication = () => {
 
                         const offerMsg: WebSocketMessage = {
                             type: "offer",
-                            from: userId,
-                            to: remoteUserId,
+                            from: String(profile?._id),
+                            to: String(participantProfile?._id),
                             sdp: offer,
                         };
                         ws.current?.send(JSON.stringify(offerMsg));
@@ -194,7 +200,10 @@ const Communication = () => {
                     const message: WebSocketMessage = JSON.parse(event.data);
                     console.log("Received WebSocket message:", message.type);
 
-                    if (message.from === userId || !peerConnection.current)
+                    if (
+                        message.from === String(profile?._id) ||
+                        !peerConnection.current
+                    )
                         return;
 
                     switch (message.type) {
@@ -238,7 +247,7 @@ const Communication = () => {
 
             const answerMsg: WebSocketMessage = {
                 type: "answer",
-                from: userId,
+                from: String(profile?._id),
                 to: message.from,
                 sdp: answer,
             };
@@ -337,7 +346,7 @@ const Communication = () => {
     useEffect(() => {
         initializeWebRTC();
         return cleanup;
-    }, []);
+    }, [profile?._id, participantProfile?._id]);
 
     return (
         <View className="flex-1 bg-black p-4">
