@@ -1,3 +1,4 @@
+import { CallProvider } from "@/context/CallContext";
 import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/useColorScheme";
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
@@ -26,8 +27,9 @@ const DARK_THEME: Theme = {
     colors: NAV_THEME.dark,
 };
 
+// const convex_url = Config.CONVEX_URL ? Config.CONVEX_URL : "";
 const convex = new ConvexReactClient(
-    "https://precious-axolotl-250.convex.cloud",
+    "https://dutiful-hamster-882.convex.cloud",
     {
         unsavedChangesWarning: false,
     }
@@ -87,10 +89,12 @@ function AppNavigator() {
     // If authenticated, show the main app navigation
     return (
         <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
-            <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
-            <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(tabs)" />
-            </Stack>
+            <CallProvider>
+                <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
+                <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="(tabs)" />
+                </Stack>
+            </CallProvider>
         </ThemeProvider>
     );
 }

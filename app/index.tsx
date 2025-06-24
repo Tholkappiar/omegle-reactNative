@@ -1,10 +1,11 @@
 import { View } from "react-native";
-import JoinRoom from "./(tabs)/JoinRoom";
+import CallInitiation from "./(tabs)/CallInitiation";
 
 export default function Index() {
     return (
         <View className="flex-1">
-            <JoinRoom />
+            {/* <JoinRoom /> */}
+            <CallInitiation />
         </View>
     );
 }

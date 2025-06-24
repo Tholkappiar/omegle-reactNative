@@ -7,7 +7,7 @@ const _layout = () => {
     return (
         <Tabs screenOptions={{ headerShown: false }}>
             <Tabs.Screen
-                name="JoinRoom"
+                name="CallInitiation"
                 options={{
                     title: "Join Room",
                     tabBarIcon: () => <DoorOpen />,
