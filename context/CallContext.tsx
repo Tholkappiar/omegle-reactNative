@@ -29,7 +29,7 @@ interface CallState {
     incomingCall: { from: string; callId: string } | null;
     setIncomingCall: (call: { from: string; callId: string } | null) => void;
     ws: WebSocket | null;
-    userEmail: string;
+    userEmail: string | undefined;
 }
 
 const CallContext = createContext<CallState | undefined>(undefined);
@@ -45,12 +45,15 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
     const [isProcessingCall, setIsProcessingCall] = useState(false);
     const router = useRouter();
 
-    const userEmail = String(useQuery(api.user.getProfile)?.email);
+    const userEmail = useQuery(api.user.getProfile)?.email;
 
     const token = useAuthToken();
 
     useEffect(() => {
-        if (!userEmail) return;
+        if (!userEmail || !token) {
+            console.log("No userEmail or Token Found.");
+            return;
+        }
         const websocket = new WebSocket(
             `wss://signaling-server-vl35.onrender.com?token=${token}`
         );

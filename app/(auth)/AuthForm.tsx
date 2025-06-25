@@ -14,13 +14,45 @@ export default function AuthForm() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const [emailError, setEmailError] = useState("");
+    const [passwordError, setPasswordError] = useState("");
+    const [authError, setAuthError] = useState("");
+
+    const validateEmail = (email: string) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    };
+
+    const validatePassword = (password: string) => {
+        return password.length >= 8;
+    };
 
     const handleAuth = async () => {
+        setEmailError("");
+        setPasswordError("");
+        setAuthError("");
+
+        // Validate inputs
+        let isValid = true;
+
+        if (!validateEmail(email)) {
+            setEmailError("Please enter a valid email address");
+            isValid = false;
+        }
+
+        if (!validatePassword(password)) {
+            setPasswordError("Password must be at least 8 characters long");
+            isValid = false;
+        }
+
+        if (!isValid) return;
+
         setLoading(true);
         try {
             await signIn("password", { email, password, flow: step });
-        } catch (error) {
+        } catch (error: any) {
             console.error("Auth error:", error);
+            setAuthError("Invalid email or password");
         } finally {
             setLoading(false);
         }
@@ -35,22 +67,50 @@ export default function AuthForm() {
 
                 <TextInput
                     placeholder="Email"
-                    onChangeText={setEmail}
+                    onChangeText={(text) => {
+                        setEmail(text);
+                        setEmailError("");
+                        setAuthError("");
+                    }}
                     value={email}
                     inputMode="email"
                     autoCapitalize="none"
-                    className="bg-white p-4 mb-4 rounded-full border border-pink-200 shadow-sm"
+                    className={`bg-white p-4 mb-4 rounded-full border ${
+                        emailError ? "border-red-500" : "border-pink-200"
+                    } shadow-sm text-black`}
                     placeholderTextColor="#94a3b8"
                 />
+                {emailError ? (
+                    <Text className="text-red-500 text-sm mb-4">
+                        {emailError}
+                    </Text>
+                ) : null}
 
                 <TextInput
                     placeholder="Password"
-                    onChangeText={setPassword}
+                    onChangeText={(text) => {
+                        setPassword(text);
+                        setPasswordError("");
+                        setAuthError("");
+                    }}
                     value={password}
                     secureTextEntry
-                    className="bg-white p-4 mb-6 rounded-full border border-pink-200 shadow-sm"
+                    className={`bg-white p-4 mb-6 rounded-full border ${
+                        passwordError ? "border-red-500" : "border-pink-200"
+                    } shadow-sm text-black`}
                     placeholderTextColor="#94a3b8"
                 />
+                {passwordError ? (
+                    <Text className="text-red-500 text-sm mb-4">
+                        {passwordError}
+                    </Text>
+                ) : null}
+
+                {authError ? (
+                    <Text className="text-red-500 text-sm mb-4 text-center">
+                        {authError}
+                    </Text>
+                ) : null}
 
                 <TouchableOpacity
                     className={`${
