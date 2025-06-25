@@ -1,7 +1,13 @@
 import { useCall } from "@/context/CallContext";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import {
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from "react-native";
 import {
     mediaDevices,
     MediaStream,
@@ -19,13 +25,22 @@ interface WebSocketMessage {
         | "initiate_call"
         | "accept_call"
         | "decline_call"
-        | "error";
+        | "error"
+        | "chat";
     from: string;
     to: string;
     sdp?: any;
     candidate?: any;
     callId?: string;
     message?: string;
+    timestamp?: number;
+}
+
+interface ChatMessage {
+    id: string;
+    from: string;
+    message: string;
+    timestamp: number;
 }
 
 const Communication = () => {
@@ -35,6 +50,10 @@ const Communication = () => {
         useState<MediaStream | null>(null);
     const [isConnecting, setIsConnecting] = useState(true);
     const [callStatus, setCallStatus] = useState<string>("Connecting...");
+
+    const [ChatSectionStatus, setChatSectionStatus] = useState<boolean>(false);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const [newMessage, setNewMessage] = useState("");
 
     const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
     const { ws, userEmail } = useCall();
@@ -283,6 +302,23 @@ const Communication = () => {
                     case "candidate":
                         handleIceCandidate(message.candidate);
                         break;
+                    case "chat":
+                        if (!message.from) {
+                            console.warn(
+                                "Ignoring chat message with undefined 'from'"
+                            );
+                            return;
+                        }
+                        setMessages((prev) => [
+                            ...prev,
+                            {
+                                id: `${message.from}-${message.timestamp}`,
+                                from: message.from,
+                                message: message.message || "",
+                                timestamp: message.timestamp || Date.now(),
+                            },
+                        ]);
+                        break;
                     default:
                         console.log("Unhandled message type:", message.type);
                 }
@@ -339,6 +375,34 @@ const Communication = () => {
         };
     }, [userEmail, peerEmail, callId]);
 
+    const sendMessage = () => {
+        if (!ws || !newMessage.trim() || !userEmail) {
+            console.warn("Cannot send message: missing WebSocket or userEmail");
+            return;
+        }
+
+        const messageData = {
+            type: "chat",
+            from: userEmail,
+            to: peerEmail,
+            message: newMessage,
+            callId,
+            timestamp: Date.now(),
+        };
+
+        ws.send(JSON.stringify(messageData));
+        setMessages((prev) => [
+            ...prev,
+            {
+                id: `${messageData.timestamp}-${userEmail}`,
+                from: userEmail,
+                message: newMessage,
+                timestamp: messageData.timestamp,
+            },
+        ]);
+        setNewMessage("");
+    };
+
     return (
         <View className="flex-1 bg-black">
             <View className="bg-gray-800 p-4">
@@ -381,7 +445,16 @@ const Communication = () => {
                 )}
             </View>
 
-            <View className="p-6 bg-gray-800">
+            <View className="p-6 bg-gray-800 flex-row">
+                <TouchableOpacity
+                    className="bg-blue-500 py-4 px-8 rounded-full mx-auto"
+                    onPress={() => setChatSectionStatus((prev) => !prev)}
+                >
+                    <Text className="text-white text-center font-bold text-lg">
+                        Chat
+                    </Text>
+                </TouchableOpacity>
+
                 <TouchableOpacity
                     className="bg-red-500 py-4 px-8 rounded-full mx-auto"
                     onPress={endCall}
@@ -391,6 +464,66 @@ const Communication = () => {
                     </Text>
                 </TouchableOpacity>
             </View>
+
+            {ChatSectionStatus && (
+                <View className="absolute bottom-20 left-0 right-0 h-2/3 bg-gray-900/90 rounded-t-3xl p-4">
+                    <View className="flex-row justify-between items-center mb-4">
+                        <Text className="text-white text-lg font-semibold">
+                            Chat with {peerEmail}
+                        </Text>
+                        <TouchableOpacity
+                            onPress={() => setChatSectionStatus(false)}
+                        >
+                            <Text className="text-white text-lg font-bold">
+                                ✕
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <ScrollView
+                        className="flex-1 mb-4"
+                        contentContainerStyle={{ paddingBottom: 20 }}
+                    >
+                        {messages
+                            .sort((a, b) => a.timestamp - b.timestamp)
+                            .map((msg) => (
+                                <View
+                                    key={msg.id}
+                                    className={`mb-2 p-3 rounded-lg max-w-[80%] ${
+                                        msg.from === userEmail
+                                            ? "bg-blue-500 ml-auto"
+                                            : "bg-gray-700"
+                                    }`}
+                                >
+                                    <Text className="text-white">
+                                        {msg.message}
+                                    </Text>
+                                    <Text className="text-xs text-gray-300 mt-1">
+                                        {new Date(
+                                            msg.timestamp
+                                        ).toLocaleTimeString()}
+                                    </Text>
+                                </View>
+                            ))}
+                    </ScrollView>
+                    <View className="flex-row items-center">
+                        <TextInput
+                            className="flex-1 bg-gray-800 text-white p-3 rounded-full mr-2"
+                            placeholder="Type a message..."
+                            placeholderTextColor="#94a3b8"
+                            value={newMessage}
+                            onChangeText={setNewMessage}
+                        />
+                        <TouchableOpacity
+                            className="bg-blue-500 p-3 rounded-full"
+                            onPress={sendMessage}
+                            disabled={!newMessage.trim()}
+                        >
+                            <Text className="text-white font-bold">Send</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            )}
         </View>
     );
 };
